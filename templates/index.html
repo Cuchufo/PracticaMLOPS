@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Model Deployment</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group input, .form-group select {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        .model-info {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .model-info p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Modelo de ML desplegado</h1>
+        <p>Envía una solicitud para obtener una predicción.</p>
+        <form id="prediction-form">
+            <div class="form-group">
+                <select id="input-variable-predictora" required>
+                    <option value="" disabled selected>Selecciona una variable predictora</option>
+                    {% for option in variable_options %}
+                    <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <button type="submit">Obtener Predicción</button>
+            </div>
+        </form>
+        <div class="result" id="result"></div>
+        <div class="model-info" id="model-info"></div>
+    </div>
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const inputData = {
+                variable_predictora: document.getElementById('input-variable-predictora').value
+            };
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(inputData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 'Predicción: ' + data.prediction + '<br>' + data.message;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        // Obtener información del modelo
+        fetch('/model_info')
+        .then(response => response.json())
+        .then(data => {
+            const modelInfoDiv = document.getElementById('model-info');
+            if (data.error) {
+                modelInfoDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+            } else {
+                modelInfoDiv.innerHTML = `
+                    <h2>Información del Modelo</h2>
+                    <p><strong>Nombre del Modelo:</strong> ${data.name}</p>
+                    <p><strong>Fecha de Producción:</strong> ${data.production_date}</p>
+                    <p><strong>URL de GitHub:</strong> <a href="${data.github_url}" target="_blank">${data.github_url}</a></p>
+                    <p><strong>Score:</strong> ${data.score}</p>
+                    <p><strong>Fecha de Baja:</strong> ${data.decommission_date}</p>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error al obtener la información del modelo:', error);
+        });
+    </script>
+</body>
+</html>
